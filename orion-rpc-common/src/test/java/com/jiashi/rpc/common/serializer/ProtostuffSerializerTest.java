@@ -21,7 +21,7 @@ public class ProtostuffSerializerTest {
 
         // 构造一个模拟的 RPC 请求对象
         RpcRequest rpcRequest = new RpcRequest();
-        rpcRequest.setRequestId(UUID.randomUUID().toString());
+        rpcRequest.setRequestId(111);
         rpcRequest.setInterfaceName("com.jiashi.rpc.api.HelloService");
         rpcRequest.setMethodName("hello");
         rpcRequest.setParameters(new Object[]{"yufan", 666}); // 测试多种类型的参数
