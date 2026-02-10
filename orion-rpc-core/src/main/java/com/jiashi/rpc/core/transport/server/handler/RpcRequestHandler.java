@@ -24,7 +24,6 @@ public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcMessage> {
         log.info("服务端收到消息:{}",rpcMessage);
         if(rpcMessage.getMessageType() == MessageType.REQUEST.getCode()){
             // 请求
-            // TODO: 这里以后会改成“反射调用真实服务”
             RpcRequest request = (RpcRequest)rpcMessage.getData();
 
             // 构造响应体 (RpcResponse)

@@ -10,9 +10,7 @@ import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
 import com.jiashi.rpc.core.transport.client.handler.RpcResponseHandler;
 import com.jiashi.rpc.core.transport.client.initializer.RpcResponseInitializer;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -21,51 +19,52 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NettyClient {
 
-    public void start(String host, int port) {
-        start0(host, port);
+    private final String host;
+    private final int port;
+    private final Bootstrap bootstrap;
+    private final EventLoopGroup group;
+    private Channel channel;
+
+    public NettyClient(String host, int port) {
+        this.host = host;
+        this.port = port;
+        this.group = new NioEventLoopGroup();
+        this.bootstrap = new Bootstrap();
+        this.bootstrap.group(group)
+                .channel(NioSocketChannel.class)
+                .handler(new RpcResponseInitializer());
     }
 
-    public void start0(String host, int port) {
-        EventLoopGroup group = new NioEventLoopGroup();
+    public void connect() {
         try {
-            Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(group)
-                    .channel(NioSocketChannel.class) // 客户端用 SocketChannel
-                    .handler(new RpcResponseInitializer());
-
             ChannelFuture future = bootstrap.connect(host, port).sync();
-            log.info("客户端连接成功！");
-
-            // 2. 构造一个假请求 (模拟去调用 HelloService 的 sayHello 方法)
-            RpcRequest request = new RpcRequest();
-            request.setRequestId(12345);
-            request.setInterfaceName(HelloServiceImpl.class.getName());
-            request.setMethodName("hello");
-            request.setParameters(new Object[]{"hello OrionRpc"});
-            request.setParamTypes(new Class[]{String.class});
-
-            // 3. 包装成协议消息
-            RpcMessage rpcMessage = new RpcMessage();
-            rpcMessage.setCodec(SerializationType.PROTOSTUFF.getCode()); // 记得设置序列化方式
-            rpcMessage.setCompress((byte) 0);
-            rpcMessage.setMessageType(MessageType.REQUEST.getCode()); // 类型是 REQUEST
-            rpcMessage.setRequestId(12345);
-            rpcMessage.setData(request);
-
-            // 4. 发送数据！
-            future.channel().writeAndFlush(rpcMessage);
-
-            // 5. 等待关闭 (这一步是为了让客户端不要发完立刻退出，等着接收响应)
-            future.channel().closeFuture().sync();
-
-        } catch (Exception e) {
-            log.error("客户端报错", e);
-        } finally {
-            group.shutdownGracefully();
+            this.channel = future.channel();
+            log.info("连接服务端成功 {}:{}", host, port);
+        } catch (InterruptedException e) {
+            log.error("连接服务端失败", e);
         }
     }
 
-    public static void main(String[] args) {
-        new NettyClient().start("127.0.0.1", 8088);
+    public void sendRequest(RpcMessage rpcMessage) {
+        if (channel != null && channel.isActive()) {
+            channel.writeAndFlush(rpcMessage).addListener((ChannelFutureListener) future -> {
+                if (future.isSuccess()) {
+                    log.info("发送消息成功, ID: {}", rpcMessage.getRequestId());
+                } else {
+                    log.error("发送消息失败: ", future.cause());
+                }
+            });
+        } else {
+            throw new IllegalStateException("通道未建立或已关闭");
+        }
     }
+
+    public void close() {
+        if (channel != null) {
+            channel.close();
+        }
+        // 3. 关闭时，关闭的是属于这个实例的 Group
+        group.shutdownGracefully();
+    }
+
 }

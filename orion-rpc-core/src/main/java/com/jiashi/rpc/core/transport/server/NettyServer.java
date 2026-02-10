@@ -48,11 +48,11 @@ public class NettyServer {
 
         // 注册一个服务
         HelloService helloService = new HelloServiceImpl();
-        LocalRegistry.register(helloService.getClass().getName(),helloService);
+        LocalRegistry.register(HelloService.class.getName(), helloService);
         log.info("✅ 已注册服务: {}", HelloService.class.getName());
 
         // 启动服务端，监听 8088 端口
-        new NettyServer().start("127.0.0.1", 8088);
+        new NettyServer().start("127.0.0.1", 8888);
     }
 }
 
