@@ -2,7 +2,7 @@ package com.jiashi.rpc.core.transport.server;
 
 import com.jiashi.rpc.common.api.HelloService;
 import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
-import com.jiashi.rpc.core.registry.LocalRegistry;
+import com.jiashi.rpc.core.provider.LocalRegistry;
 import com.jiashi.rpc.core.transport.server.initializer.RpcServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;

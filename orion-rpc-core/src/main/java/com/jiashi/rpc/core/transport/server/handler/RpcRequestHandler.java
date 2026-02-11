@@ -4,7 +4,7 @@ import com.jiashi.rpc.common.entity.RpcRequest;
 import com.jiashi.rpc.common.entity.RpcResponse;
 import com.jiashi.rpc.common.enums.MessageType;
 import com.jiashi.rpc.core.protocol.RpcMessage;
-import com.jiashi.rpc.core.registry.LocalRegistry;
+import com.jiashi.rpc.core.provider.LocalRegistry;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.jiashi.rpc.core.registry;
+package com.jiashi.rpc.core.provider;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
