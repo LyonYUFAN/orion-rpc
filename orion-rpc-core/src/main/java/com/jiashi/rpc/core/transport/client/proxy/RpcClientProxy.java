@@ -19,11 +19,9 @@ public class RpcClientProxy implements InvocationHandler {
 
     private static final AtomicInteger ID_GENERATOR = new AtomicInteger(0);
     private final NettyClient nettyClient;
-    private final UnprocessedRequests  unprocessedRequests;
 
     public RpcClientProxy(NettyClient nettyClient) {
         this.nettyClient = nettyClient;
-        this.unprocessedRequests = new UnprocessedRequests();
     }
 
     // 获得代理对象
@@ -55,7 +53,7 @@ public class RpcClientProxy implements InvocationHandler {
         rpcMessage.setData(request);
 
         CompletableFuture<RpcResponse> future = new CompletableFuture<>();
-        unprocessedRequests.put(String.valueOf(request.getRequestId()), future);
+        UnprocessedRequests.put(String.valueOf(request.getRequestId()), future);
         nettyClient.sendRequest(rpcMessage);
         RpcResponse rpcResponse = null;
         try {

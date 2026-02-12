@@ -7,6 +7,8 @@ import com.jiashi.rpc.core.codec.RpcMessageDecoder;
 import com.jiashi.rpc.core.codec.RpcMessageEncoder;
 import com.jiashi.rpc.core.protocol.RpcMessage;
 import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
+import com.jiashi.rpc.core.registry.ServiceDiscovery;
+import com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl;
 import com.jiashi.rpc.core.transport.client.handler.RpcResponseHandler;
 import com.jiashi.rpc.core.transport.client.initializer.RpcResponseInitializer;
 import io.netty.bootstrap.Bootstrap;
@@ -14,56 +16,97 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class NettyClient {
 
-    private final String host;
-    private final int port;
     private final Bootstrap bootstrap;
     private final EventLoopGroup group;
-    private Channel channel;
+    private final ServiceDiscovery serviceDiscovery;
+    private final Map<String, Channel> channelCache = new ConcurrentHashMap<>();
 
-    public NettyClient(String host, int port) {
-        this.host = host;
-        this.port = port;
+    public NettyClient() {
         this.group = new NioEventLoopGroup();
         this.bootstrap = new Bootstrap();
         this.bootstrap.group(group)
                 .channel(NioSocketChannel.class)
                 .handler(new RpcResponseInitializer());
+
+        serviceDiscovery = new ZkServiceDiscoveryImpl();
+
     }
 
-    public void connect() {
-        try {
-            ChannelFuture future = bootstrap.connect(host, port).sync();
-            this.channel = future.channel();
-            log.info("连接服务端成功 {}:{}", host, port);
-        } catch (InterruptedException e) {
-            log.error("连接服务端失败", e);
-        }
-    }
-
+    /**
+     * 发送 RPC 请求
+     */
+    @SneakyThrows
     public void sendRequest(RpcMessage rpcMessage) {
+        RpcRequest request = (RpcRequest)rpcMessage.getData();
+        InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(request.getInterfaceName());
+        String addressKey = inetSocketAddress.toString();
+        // 获取通道 (优先从缓存拿，没有则连接)
+        Channel channel = getChannel(inetSocketAddress);
         if (channel != null && channel.isActive()) {
             channel.writeAndFlush(rpcMessage).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
-                    log.info("发送消息成功, ID: {}", rpcMessage.getRequestId());
+                    log.info("Client send message: [{}]", rpcMessage);
                 } else {
-                    log.error("发送消息失败: ", future.cause());
+                    future.channel().close();
+                    log.error("Send failed:", future.cause());
                 }
             });
         } else {
-            throw new IllegalStateException("通道未建立或已关闭");
+            throw new IllegalStateException("Failed to get channel for address: " + addressKey);
         }
     }
 
-    public void close() {
-        if (channel != null) {
-            channel.close();
+    /**
+     * 连接服务端的逻辑 (带缓存)
+     */
+    @SneakyThrows
+    public Channel getChannel(InetSocketAddress inetSocketAddress) {
+        String key = inetSocketAddress.toString();
+
+        // 如果缓存里有且是活跃的，直接用
+        if (channelCache.containsKey(key)) {
+            Channel channel = channelCache.get(key);
+            if (channel != null && channel.isActive()) {
+                return channel;
+            }
+            channelCache.remove(key); // 不活跃了就移除
         }
-        // 3. 关闭时，关闭的是属于这个实例的 Group
+
+        // 建立新连接
+        Channel channel = connect(inetSocketAddress);
+        channelCache.put(key, channel);
+        return channel;
+    }
+
+    @SneakyThrows
+    private Channel connect(InetSocketAddress inetSocketAddress) {
+        CompletableFuture<Channel> completableFuture = new CompletableFuture<>();
+
+        bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener) future -> {
+            if (future.isSuccess()) {
+                log.info("Connect to server [{}] success!", inetSocketAddress.toString());
+                completableFuture.complete(future.channel());
+            } else {
+                throw new IllegalStateException();
+            }
+        });
+
+        // 阻塞等待连接成功
+        return completableFuture.get();
+    }
+
+    public void close() {
         group.shutdownGracefully();
     }
 

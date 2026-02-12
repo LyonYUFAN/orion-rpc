@@ -13,7 +13,7 @@ public class UnprocessedRequests {
 
     private static final ConcurrentHashMap<String, CompletableFuture<RpcResponse>> UNPROCESSED_RESPONSE_FUTURES = new ConcurrentHashMap<>();
 
-    public void put(String requestId, CompletableFuture<RpcResponse> future) {
+    public static void put(String requestId, CompletableFuture<RpcResponse> future) {
 
         CompletableFuture<RpcResponse> oldFuture = UNPROCESSED_RESPONSE_FUTURES.putIfAbsent(requestId, future);
 
