@@ -11,14 +11,15 @@ import com.jiashi.rpc.core.transport.client.UnprocessedRequests;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RpcClientProxy implements InvocationHandler {
 
-    private static final AtomicInteger ID_GENERATOR = new AtomicInteger(0);
     private final NettyClient nettyClient;
+    private static final AtomicInteger ID_GENERATOR = new AtomicInteger(0);
 
     public RpcClientProxy(NettyClient nettyClient) {
         this.nettyClient = nettyClient;
@@ -52,9 +53,7 @@ public class RpcClientProxy implements InvocationHandler {
         rpcMessage.setRequestId(request.getRequestId());
         rpcMessage.setData(request);
 
-        CompletableFuture<RpcResponse> future = new CompletableFuture<>();
-        UnprocessedRequests.put(String.valueOf(request.getRequestId()), future);
-        nettyClient.sendRequest(rpcMessage);
+        CompletableFuture<RpcResponse> future = nettyClient.sendRequest(rpcMessage);
         RpcResponse rpcResponse = null;
         try {
             rpcResponse = future.get();

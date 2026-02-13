@@ -7,7 +7,7 @@ package com.jiashi.rpc.common.entity;
 public class RpcRequest {
 
     // 请求号 (用来匹配响应)
-    private Integer requestId;
+    private int requestId;
     // 调用的接口名 (例如: com.jiashi.rpc.api.HelloService)
     private String interfaceName;
     // 调用的方法名 (例如: hello)
@@ -17,8 +17,8 @@ public class RpcRequest {
     // 参数值列表
     private Object[] parameters;
 
-    public Integer getRequestId() { return requestId; }
-    public void setRequestId(Integer requestId) { this.requestId = requestId; }
+    public int getRequestId() { return requestId; }
+    public void setRequestId(int requestId) { this.requestId = requestId; }
 
     public String getInterfaceName() { return interfaceName; }
     public void setInterfaceName(String interfaceName) { this.interfaceName = interfaceName; }

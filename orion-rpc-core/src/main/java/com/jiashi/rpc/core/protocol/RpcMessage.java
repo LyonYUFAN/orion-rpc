@@ -30,7 +30,7 @@ public class RpcMessage {
     /**
      * 请求ID (用于将响应匹配回请求)
      */
-    private int requestId;
+    private Integer requestId;
 
     /**
      * 数据内容 (被序列化后的 RpcRequest 或 RpcResponse 字节数组)

@@ -3,6 +3,8 @@ package com.jiashi.rpc.core.transport.server;
 import com.jiashi.rpc.common.api.HelloService;
 import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
 import com.jiashi.rpc.core.provider.LocalRegistry;
+import com.jiashi.rpc.core.registry.ServiceRegistry;
+import com.jiashi.rpc.core.registry.zk.ZkServiceRegistryImpl;
 import com.jiashi.rpc.core.transport.server.initializer.RpcServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -11,6 +13,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.InetSocketAddress;
 
 @Slf4j
 public class NettyServer {
@@ -49,10 +53,11 @@ public class NettyServer {
         // 注册一个服务
         HelloService helloService = new HelloServiceImpl();
         LocalRegistry.register(HelloService.class.getName(), helloService);
-        log.info("✅ 已注册服务: {}", HelloService.class.getName());
-
+        // 远程注册 (为了让客户端能发现这个服务)
+        ServiceRegistry serviceRegistry = new ZkServiceRegistryImpl();
+        serviceRegistry.registerService(HelloService.class.getName(),new InetSocketAddress("127.0.0.1", 9999));
         // 启动服务端，监听 8088 端口
-        new NettyServer().start("127.0.0.1", 8888);
+        new NettyServer().start("127.0.0.1", 9999);
     }
 }
 

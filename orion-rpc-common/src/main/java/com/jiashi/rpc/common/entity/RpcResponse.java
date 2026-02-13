@@ -7,7 +7,7 @@ package com.jiashi.rpc.common.entity;
 public class RpcResponse {
 
     // 对应的请求号
-    private Integer requestId;
+    private int requestId;
     // 状态码 (200=成功, 500=失败)
     private Integer code;
     // 错误信息 (如果失败了，这里放报错内容)
@@ -31,8 +31,8 @@ public class RpcResponse {
         return response;
     }
 
-    public Integer getRequestId() { return requestId; }
-    public void setRequestId(Integer requestId) { this.requestId = requestId; }
+    public int getRequestId() { return requestId; }
+    public void setRequestId(int requestId) { this.requestId = requestId; }
 
     public Integer getCode() { return code; }
     public void setCode(Integer code) { this.code = code; }

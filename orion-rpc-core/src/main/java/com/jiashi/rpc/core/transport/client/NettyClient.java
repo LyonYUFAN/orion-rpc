@@ -1,6 +1,8 @@
 package com.jiashi.rpc.core.transport.client;
 
+import com.jiashi.rpc.common.api.HelloService;
 import com.jiashi.rpc.common.entity.RpcRequest;
+import com.jiashi.rpc.common.entity.RpcResponse;
 import com.jiashi.rpc.common.enums.MessageType;
 import com.jiashi.rpc.common.enums.SerializationType;
 import com.jiashi.rpc.core.codec.RpcMessageDecoder;
@@ -11,6 +13,7 @@ import com.jiashi.rpc.core.registry.ServiceDiscovery;
 import com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl;
 import com.jiashi.rpc.core.transport.client.handler.RpcResponseHandler;
 import com.jiashi.rpc.core.transport.client.initializer.RpcResponseInitializer;
+import com.jiashi.rpc.core.transport.client.proxy.RpcClientProxy;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -47,13 +50,15 @@ public class NettyClient {
      * 发送 RPC 请求
      */
     @SneakyThrows
-    public void sendRequest(RpcMessage rpcMessage) {
+    public CompletableFuture<RpcResponse> sendRequest(RpcMessage rpcMessage) {
         RpcRequest request = (RpcRequest)rpcMessage.getData();
         InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(request.getInterfaceName());
         String addressKey = inetSocketAddress.toString();
         // 获取通道 (优先从缓存拿，没有则连接)
         Channel channel = getChannel(inetSocketAddress);
         if (channel != null && channel.isActive()) {
+            CompletableFuture<RpcResponse> resultFuture = new CompletableFuture<>();
+            UnprocessedRequests.put(request.getRequestId(), resultFuture);
             channel.writeAndFlush(rpcMessage).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
                     log.info("Client send message: [{}]", rpcMessage);
@@ -62,6 +67,7 @@ public class NettyClient {
                     log.error("Send failed:", future.cause());
                 }
             });
+            return resultFuture;
         } else {
             throw new IllegalStateException("Failed to get channel for address: " + addressKey);
         }
@@ -110,4 +116,12 @@ public class NettyClient {
         group.shutdownGracefully();
     }
 
+    public static void main(String[] args) {
+
+        NettyClient nettyClient = new NettyClient();
+        RpcClientProxy rpcClientProxy = new RpcClientProxy(nettyClient);
+        HelloService service = rpcClientProxy.getProxy(HelloService.class);
+        String result = service.hello("jiashi");
+        System.out.println("RPC 调用成功！服务端返回结果: " + result);
+    }
 }
