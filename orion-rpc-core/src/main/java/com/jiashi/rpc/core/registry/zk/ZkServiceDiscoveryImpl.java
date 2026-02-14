@@ -3,14 +3,15 @@ package com.jiashi.rpc.core.registry.zk;
 import com.jiashi.rpc.core.enumeration.RpcErrorMessageEnum;
 import com.jiashi.rpc.core.exception.RpcException;
 import com.jiashi.rpc.core.registry.ServiceDiscovery;
+import com.jiashi.rpc.core.registry.ServiceInstance;
 import org.apache.curator.framework.CuratorFramework;
 
-import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ZkServiceDiscoveryImpl implements ServiceDiscovery {
     @Override
-    public InetSocketAddress lookupService(String serviceName) {
+    public List<ServiceInstance> lookupService(String serviceName) {
 
         CuratorFramework client = CuratorUtils.getCuratorClient();
         String servicePath = "/" + serviceName;
@@ -21,15 +22,18 @@ public class ZkServiceDiscoveryImpl implements ServiceDiscovery {
             }
 
             // 负载均衡
-            // TODO: 这里目前直接取第一个地址 (serviceUrlList.get(0))。
-            String targetServiceUrl = serviceUrlList.get(0);
-
-            // 解析地址字符串 (例如 "127.0.0.1:8080") -> InetSocketAddress
-            String[] socketAddressArray = targetServiceUrl.split(":");
-            String host = socketAddressArray[0];
-            int port = Integer.parseInt(socketAddressArray[1]);
-
-            return new InetSocketAddress(host, port);
+            return serviceUrlList.stream().map(url -> {
+                String[] socketAddressArray = url.split(":");
+                String host = socketAddressArray[0];
+                int port = Integer.parseInt(socketAddressArray[1]);
+                // 使用Builder构建对象
+                return ServiceInstance.builder()
+                        .serviceName(serviceName)
+                        .host(host)
+                        .port(port)
+                        // .weight(100) // 以后如果ZK里存了权重，可以在这里解析
+                        .build();
+            }).collect(Collectors.toList());
         }catch (Exception e){
             throw new RpcException(RpcErrorMessageEnum.SERVICE_NOT_FOUND, servicePath);
         }

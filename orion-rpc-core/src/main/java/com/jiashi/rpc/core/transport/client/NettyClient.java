@@ -10,6 +10,7 @@ import com.jiashi.rpc.core.codec.RpcMessageEncoder;
 import com.jiashi.rpc.core.protocol.RpcMessage;
 import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
 import com.jiashi.rpc.core.registry.ServiceDiscovery;
+import com.jiashi.rpc.core.registry.ServiceInstance;
 import com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl;
 import com.jiashi.rpc.core.transport.client.handler.RpcResponseHandler;
 import com.jiashi.rpc.core.transport.client.initializer.RpcResponseInitializer;
@@ -23,6 +24,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +34,6 @@ public class NettyClient {
 
     private final Bootstrap bootstrap;
     private final EventLoopGroup group;
-    private final ServiceDiscovery serviceDiscovery;
     private final Map<String, Channel> channelCache = new ConcurrentHashMap<>();
 
     public NettyClient() {
@@ -42,18 +43,14 @@ public class NettyClient {
                 .channel(NioSocketChannel.class)
                 .handler(new RpcResponseInitializer());
 
-        serviceDiscovery = new ZkServiceDiscoveryImpl();
-
     }
 
     /**
      * 发送 RPC 请求
      */
     @SneakyThrows
-    public CompletableFuture<RpcResponse> sendRequest(RpcMessage rpcMessage) {
+    public CompletableFuture<RpcResponse> sendRequest(RpcMessage rpcMessage,InetSocketAddress inetSocketAddress) {
         RpcRequest request = (RpcRequest)rpcMessage.getData();
-        InetSocketAddress inetSocketAddress = serviceDiscovery.lookupService(request.getInterfaceName());
-        String addressKey = inetSocketAddress.toString();
         // 获取通道 (优先从缓存拿，没有则连接)
         Channel channel = getChannel(inetSocketAddress);
         if (channel != null && channel.isActive()) {
@@ -69,7 +66,7 @@ public class NettyClient {
             });
             return resultFuture;
         } else {
-            throw new IllegalStateException("Failed to get channel for address: " + addressKey);
+            throw new IllegalStateException("Failed to get channel for address: " + inetSocketAddress);
         }
     }
 
