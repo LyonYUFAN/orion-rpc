@@ -12,6 +12,7 @@ import com.jiashi.rpc.core.registry.ServiceInstance;
 import com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl;
 import com.jiashi.rpc.core.transport.client.NettyClient;
 import com.jiashi.rpc.core.transport.client.UnprocessedRequests;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -21,8 +22,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 public class RpcClientProxy implements InvocationHandler {
 
     private final NettyClient nettyClient;
@@ -73,18 +76,40 @@ public class RpcClientProxy implements InvocationHandler {
 
         InetSocketAddress targetAddress = new InetSocketAddress(selectedInstance.getHost(), selectedInstance.getPort());
 
-        CompletableFuture<RpcResponse> future = nettyClient.sendRequest(rpcMessage,targetAddress);
-        RpcResponse rpcResponse = null;
-        try {
-            rpcResponse = future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            System.err.println("RPC 调用等待被中断或发生错误");
-            e.printStackTrace();
+        // 核心修改：重试机制 (Loop Retry)
+        int maxRetries = 3;
+        int retryCount = 0;
+        Throwable lastException = null;
+
+        while (retryCount < maxRetries) {
+            try {
+                // 发送请求
+                CompletableFuture<RpcResponse> future = nettyClient.sendRequest(rpcMessage, targetAddress);
+
+                // 阻塞等待结果 (带超时控制，例如 3秒)
+                // 如果 3秒 没结果，抛出 TimeoutException，触发 catch 进入重试
+                RpcResponse response = future.get(3, TimeUnit.SECONDS);
+
+                // 检查响应状态
+                if (response == null) {
+                    throw new RuntimeException("服务响应为空");
+                }
+                if (response.getCode() != 200) {
+                    throw new RuntimeException(response.getMsg());
+                }
+
+                // 成功直接返回
+                return response.getData();
+
+            } catch (Exception e) {
+                retryCount++;
+                lastException = e;
+                log.warn("RPC 调用失败，正在进行第 {} 次重试... 异常: {}", retryCount, e.getMessage());
+            }
         }
-        if (rpcResponse != null) {
-            return rpcResponse.getData();
-        }
-        return null;
+        // 重试耗尽，抛出最终异常
+        log.error("RPC 调用失败，重试次数已耗尽: {}", method.getName());
+        throw new RuntimeException("RPC 调用失败，重试 " + maxRetries + " 次后无果", lastException);
     }
 }
 

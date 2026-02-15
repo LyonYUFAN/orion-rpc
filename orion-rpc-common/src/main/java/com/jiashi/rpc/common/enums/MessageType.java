@@ -2,30 +2,30 @@ package com.jiashi.rpc.common.enums;
 
 import com.jiashi.rpc.common.entity.RpcRequest;
 import com.jiashi.rpc.common.entity.RpcResponse;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
-@AllArgsConstructor
-@Getter
 public enum MessageType {
 
-    /**
-     * 请求消息 -> 对应 RpcRequest 类
-     */
     REQUEST((byte) 1, RpcRequest.class),
-
-    /**
-     * 响应消息 -> 对应 RpcResponse 类
-     */
     RESPONSE((byte) 2, RpcResponse.class),
-
-    /**
-     * 心跳消息 -> 不需要反序列化 Body (或者对应 null)
-     */
     HEARTBEAT((byte) 3, null);
 
     private final byte code;
     private final Class<?> contentClass;
+
+    // 手写构造器，确保 Maven 一定能识别
+    MessageType(byte code, Class<?> contentClass) {
+        this.code = code;
+        this.contentClass = contentClass;
+    }
+
+    // 手写 Getter
+    public byte getCode() {
+        return code;
+    }
+
+    public Class<?> getContentClass() {
+        return contentClass;
+    }
 
     public static MessageType findByCode(byte code) {
         for (MessageType type : MessageType.values()) {
@@ -33,6 +33,6 @@ public enum MessageType {
                 return type;
             }
         }
-        return null; // 或者抛出异常
+        return null;
     }
 }

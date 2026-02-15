@@ -7,6 +7,8 @@ import com.jiashi.rpc.core.protocol.RpcMessage;
 import com.jiashi.rpc.core.provider.LocalRegistry;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -21,7 +23,26 @@ public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcMessage> {
     //channelRead0在数据已经被解码成一个完整的Java对象，且类型匹配的时触发
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RpcMessage rpcMessage) throws Exception {
-        log.info("服务端收到消息:{}",rpcMessage);
+        System.out.println("【服务端Handler】收到消息了！类型码：" + rpcMessage.getMessageType());
+        // 获取消息类型
+        byte type = rpcMessage.getMessageType();
+        if (type == MessageType.HEARTBEAT.getCode()) {
+            // 心跳日志用debug级别，否则控制台会被刷屏
+            if (log.isDebugEnabled()) {
+                log.debug("服务端收到心跳包 Ping: {}", channelHandlerContext.channel().remoteAddress());
+            }
+            // 构造Pong响应 (原路返回一个空包)
+            RpcMessage pong = new RpcMessage();
+            pong.setMessageType(MessageType.HEARTBEAT.getCode());
+            pong.setCodec(rpcMessage.getCodec());
+            pong.setCompress(rpcMessage.getCompress());
+            pong.setRequestId(rpcMessage.getRequestId());
+            pong.setData(null); // 心跳包没有 Body
+            // 发送 Pong
+            channelHandlerContext.writeAndFlush(pong);
+            return;
+        }
+
         if(rpcMessage.getMessageType() == MessageType.REQUEST.getCode()){
             // 请求
             RpcRequest request = (RpcRequest)rpcMessage.getData();
@@ -64,6 +85,20 @@ public class RpcRequestHandler extends SimpleChannelInboundHandler<RpcMessage> {
 
             channelHandlerContext.writeAndFlush(responseMsg);
             log.info("服务端响应发送完毕");
+        }
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        // 处理空闲事件
+        if (evt instanceof IdleStateEvent) {
+            IdleState state = ((IdleStateEvent) evt).state();
+            if (state == IdleState.READER_IDLE) {
+                log.warn("服务端长时间未收到客户端数据，关闭连接: {}", ctx.channel().remoteAddress());
+                ctx.close();
+            }
+        }else{
+            super.userEventTriggered(ctx, evt);
         }
     }
 

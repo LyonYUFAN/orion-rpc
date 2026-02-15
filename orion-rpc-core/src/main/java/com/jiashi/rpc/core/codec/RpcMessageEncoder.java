@@ -13,21 +13,30 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class RpcMessageEncoder extends MessageToByteEncoder<RpcMessage> {
 
-
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, RpcMessage rpcMessage, ByteBuf byteBuf) throws Exception {
-        //这里的顺序必须和 ProtocolConstants 定义的一致
-        byteBuf.writeBytes(ProtocolConstants.MAGIC_NUMBER);
-        byteBuf.writeByte(ProtocolConstants.VERSION);
-        byteBuf.writeByte(rpcMessage.getMessageType());
-        byteBuf.writeByte(rpcMessage.getCodec());
-        byteBuf.writeByte(rpcMessage.getCompress());
-        byteBuf.writeInt(rpcMessage.getRequestId());
+    protected void encode(ChannelHandlerContext ctx, RpcMessage rpcMessage, ByteBuf out) throws Exception {
+        // 1. 写入头部信息
+        out.writeBytes(ProtocolConstants.MAGIC_NUMBER);
+        out.writeByte(ProtocolConstants.VERSION);
+        out.writeByte(rpcMessage.getMessageType());
+        out.writeByte(rpcMessage.getCodec());
+        out.writeByte(rpcMessage.getCompress());
+        out.writeInt(rpcMessage.getRequestId());
 
-        Serializer serializer = SerializerFactory.getSerializer(rpcMessage.getCodec());
-        byte[] bodyBytes = serializer.serialize(rpcMessage.getData());
-        byteBuf.writeInt(bodyBytes.length);
-        byteBuf.writeBytes(bodyBytes);
+        // 2. 序列化 Body (如果是心跳包，Body 为空，不做序列化)
+        byte[] bodyBytes = null;
+
+        if (rpcMessage.getData() != null) {
+            Serializer serializer = SerializerFactory.getSerializer(rpcMessage.getCodec());
+            bodyBytes = serializer.serialize(rpcMessage.getData());
+        }
+
+        // 3. 写入 Body 长度和数据
+        int length = (bodyBytes == null) ? 0 : bodyBytes.length;
+        out.writeInt(length);
+
+        if (bodyBytes != null) {
+            out.writeBytes(bodyBytes);
+        }
     }
 }
-
