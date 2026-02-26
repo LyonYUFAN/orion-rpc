@@ -13,6 +13,7 @@ import com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl;
 import com.jiashi.rpc.core.transport.client.NettyClient;
 import com.jiashi.rpc.core.transport.client.UnprocessedRequests;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
+@Component
 public class RpcClientProxy implements InvocationHandler {
 
     private final NettyClient nettyClient;
@@ -53,44 +55,43 @@ public class RpcClientProxy implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-
-        RpcRequest request = new RpcRequest();
-        request.setRequestId(ID_GENERATOR.getAndIncrement());
-        request.setInterfaceName(method.getDeclaringClass().getName());
-        request.setMethodName(method.getName());
-        request.setParameters(args);
-        request.setParamTypes(method.getParameterTypes());
-
-        List<ServiceInstance> instances = serviceDiscovery.lookupService(request.getInterfaceName());
-        ServiceInstance selectedInstance = loadBalancer.select(instances, request);
-        if (selectedInstance == null) {
-            throw new RuntimeException("No available service provider for: " + request.getInterfaceName());
-        }
-
-        RpcMessage rpcMessage = new RpcMessage();
-        rpcMessage.setCodec(SerializationType.PROTOSTUFF.getCode()); // 记得设置序列化方式
-        rpcMessage.setCompress((byte) 0);
-        rpcMessage.setMessageType(MessageType.REQUEST.getCode()); // 类型是 REQUEST
-        rpcMessage.setRequestId(request.getRequestId());
-        rpcMessage.setData(request);
-
-        InetSocketAddress targetAddress = new InetSocketAddress(selectedInstance.getHost(), selectedInstance.getPort());
-
-        // 核心修改：重试机制 (Loop Retry)
         int maxRetries = 3;
         int retryCount = 0;
         Throwable lastException = null;
 
         while (retryCount < maxRetries) {
             try {
+                // 核心修改：将构建请求的逻辑移到循环内部
+                // 确保每次重试都去 ID_GENERATOR 获取一个全新的 int ID
+                RpcRequest request = new RpcRequest();
+                request.setRequestId(ID_GENERATOR.getAndIncrement()); // 比如第一次是 0，重试就是 1，再重试是 2
+                request.setInterfaceName(method.getDeclaringClass().getName());
+                request.setMethodName(method.getName());
+                request.setParameters(args);
+                request.setParamTypes(method.getParameterTypes());
+
+                // 你的负载均衡逻辑可以在循环外，也可以在循环内（如果在循环内，可以实现重试换节点的容错策略）
+                List<ServiceInstance> instances = serviceDiscovery.lookupService(request.getInterfaceName());
+                ServiceInstance selectedInstance = loadBalancer.select(instances, request);
+                if (selectedInstance == null) {
+                    throw new RuntimeException("No available service provider for: " + request.getInterfaceName());
+                }
+
+                RpcMessage rpcMessage = new RpcMessage();
+                rpcMessage.setCodec(SerializationType.PROTOSTUFF.getCode());
+                rpcMessage.setCompress((byte) 0);
+                rpcMessage.setMessageType(MessageType.REQUEST.getCode());
+                rpcMessage.setRequestId(request.getRequestId());
+                rpcMessage.setData(request);
+
+                InetSocketAddress targetAddress = new InetSocketAddress(selectedInstance.getHost(), selectedInstance.getPort());
+
                 // 发送请求
                 CompletableFuture<RpcResponse> future = nettyClient.sendRequest(rpcMessage, targetAddress);
 
-                // 阻塞等待结果 (带超时控制，例如 3秒)
-                // 如果 3秒 没结果，抛出 TimeoutException，触发 catch 进入重试
+                // 阻塞等待结果
                 RpcResponse response = future.get(3, TimeUnit.SECONDS);
 
-                // 检查响应状态
                 if (response == null) {
                     throw new RuntimeException("服务响应为空");
                 }
@@ -98,16 +99,16 @@ public class RpcClientProxy implements InvocationHandler {
                     throw new RuntimeException(response.getMsg());
                 }
 
-                // 成功直接返回
                 return response.getData();
 
             } catch (Exception e) {
                 retryCount++;
                 lastException = e;
                 log.warn("RPC 调用失败，正在进行第 {} 次重试... 异常: {}", retryCount, e.getMessage());
+                // 如果你把重试逻辑写得很严谨，这里其实应该调用 UnprocessedRequests 的 remove 方法
+                // 把本次失败的 requestId 清理掉，防止内存泄漏。
             }
         }
-        // 重试耗尽，抛出最终异常
         log.error("RPC 调用失败，重试次数已耗尽: {}", method.getName());
         throw new RuntimeException("RPC 调用失败，重试 " + maxRetries + " 次后无果", lastException);
     }

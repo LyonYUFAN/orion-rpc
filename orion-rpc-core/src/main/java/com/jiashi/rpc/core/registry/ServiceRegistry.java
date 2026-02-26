@@ -1,5 +1,7 @@
 package com.jiashi.rpc.core.registry;
 
+import org.springframework.stereotype.Component;
+
 import java.net.InetSocketAddress;
 
 public interface ServiceRegistry {

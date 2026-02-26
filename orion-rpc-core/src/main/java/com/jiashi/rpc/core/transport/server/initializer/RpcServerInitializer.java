@@ -21,7 +21,7 @@ public class RpcServerInitializer extends ChannelInitializer<SocketChannel> {
     @Override
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         ChannelPipeline pipeline = socketChannel.pipeline();;
-        pipeline.addLast("logging", new LoggingHandler(LogLevel.INFO));
+        //pipeline.addLast("logging", new LoggingHandler(LogLevel.INFO));
         // 【新增】空闲检测
         // 参数1 (readerIdleTime): 读空闲时间。如果 90秒 没有读到数据，会触发 READER_IDLE 事件
         // 参数2 (writerIdleTime): 写空闲时间。0 表示不关心

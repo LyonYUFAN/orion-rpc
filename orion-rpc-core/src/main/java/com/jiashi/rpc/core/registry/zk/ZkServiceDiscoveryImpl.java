@@ -5,10 +5,12 @@ import com.jiashi.rpc.core.exception.RpcException;
 import com.jiashi.rpc.core.registry.ServiceDiscovery;
 import com.jiashi.rpc.core.registry.ServiceInstance;
 import org.apache.curator.framework.CuratorFramework;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class ZkServiceDiscoveryImpl implements ServiceDiscovery {
     @Override
     public List<ServiceInstance> lookupService(String serviceName) {

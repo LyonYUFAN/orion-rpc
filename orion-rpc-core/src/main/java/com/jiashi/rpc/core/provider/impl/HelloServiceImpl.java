@@ -1,7 +1,11 @@
 package com.jiashi.rpc.core.provider.impl;
 
 import com.jiashi.rpc.common.api.HelloService;
+import com.jiashi.rpc.core.annotation.RpcService;
+import org.springframework.stereotype.Service;
 
+@RpcService
+@Service
 public class HelloServiceImpl implements HelloService {
 
     @Override
