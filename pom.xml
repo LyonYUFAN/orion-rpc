@@ -11,6 +11,7 @@
     <modules>
         <module>orion-rpc-common</module>
         <module>orion-rpc-core</module>
+        <module>orion-rpc-spring-boot-starter</module>
     </modules>
 
     <build>
@@ -50,6 +51,7 @@
         <!-- 修复：降级到兼容 Java 8 的最后一个版本 -->
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
         <spring.version>5.3.27</spring.version>
+        <spring-boot.version>2.7.18</spring-boot.version>
     </properties>
     <dependencies>
         <dependency>
@@ -125,10 +127,19 @@
                 <artifactId>protostuff-core</artifactId>
                 <version>${protostuff.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.dyuproject.protostuff</groupId>
                 <artifactId>protostuff-runtime</artifactId>
                 <version>${protostuff.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

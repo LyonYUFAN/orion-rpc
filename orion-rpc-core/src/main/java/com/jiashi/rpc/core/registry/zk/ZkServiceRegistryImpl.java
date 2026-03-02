@@ -13,7 +13,6 @@ import java.net.InetSocketAddress;
 /**
  * 基于 ZooKeeper的服务注册实现类
  */
-@Component
 @Slf4j
 public class ZkServiceRegistryImpl implements ServiceRegistry {
     @Override

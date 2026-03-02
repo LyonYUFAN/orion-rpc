@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
-@Component
 public class RpcClientProxy implements InvocationHandler {
 
     private final NettyClient nettyClient;

@@ -1,6 +1,7 @@
 package com.jiashi.rpc.core.transport.server;
 
 import com.jiashi.rpc.common.api.HelloService;
+import com.jiashi.rpc.core.config.RpcConfig;
 import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
 import com.jiashi.rpc.core.provider.LocalRegistry;
 import com.jiashi.rpc.core.registry.ServiceRegistry;
@@ -18,10 +19,17 @@ import org.springframework.stereotype.Component;
 import java.net.InetSocketAddress;
 
 @Slf4j
-@Component
 public class NettyServer {
 
-    public void start(String host,int port){
+    private final RpcConfig rpcConfig;
+
+    public NettyServer(RpcConfig rpcConfig) {
+        this.rpcConfig = rpcConfig;
+    }
+
+    public void start(){
+        String host = rpcConfig.getServerHost();
+        int port = rpcConfig.getServerPort();
         start0(host,port);
     }
 
@@ -59,7 +67,7 @@ public class NettyServer {
         ServiceRegistry serviceRegistry = new ZkServiceRegistryImpl();
         serviceRegistry.registerService(HelloService.class.getName(),new InetSocketAddress("127.0.0.1", 9999));
         // 启动服务端，监听 8088 端口
-        new NettyServer().start("127.0.0.1", 9999);
+        new NettyServer(new RpcConfig("127.0.0.1",)).start();
     }
 }
 

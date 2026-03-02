@@ -1,7 +1,7 @@
-package com.jiashi.rpc.core.spring;
+package com.jiashi.rpc.spring.boot.autoconfigure.config;
 
-import com.jiashi.rpc.core.annotation.RpcReference;
-import com.jiashi.rpc.core.annotation.RpcService;
+import com.jiashi.rpc.spring.boot.autoconfigure.annotation.RpcReference;
+import com.jiashi.rpc.spring.boot.autoconfigure.annotation.RpcService;
 import com.jiashi.rpc.core.provider.LocalRegistry;
 import com.jiashi.rpc.core.registry.ServiceInstance;
 import com.jiashi.rpc.core.registry.ServiceRegistry;

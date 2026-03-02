@@ -31,7 +31,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@Component
 public class NettyClient {
 
     private final Bootstrap bootstrap;

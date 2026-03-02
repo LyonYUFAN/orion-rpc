@@ -1,4 +1,4 @@
-package com.jiashi.rpc.core.annotation;
+package com.jiashi.rpc.spring.boot.autoconfigure.annotation;
 
 import java.lang.annotation.*;
 

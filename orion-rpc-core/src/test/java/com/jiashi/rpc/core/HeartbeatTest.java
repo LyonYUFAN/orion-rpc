@@ -2,6 +2,7 @@ package com.jiashi.rpc.core.transport;
 
 import com.jiashi.rpc.core.codec.RpcMessageDecoder;
 import com.jiashi.rpc.core.codec.RpcMessageEncoder;
+import com.jiashi.rpc.core.config.RpcConfig;
 import com.jiashi.rpc.core.transport.client.handler.RpcResponseHandler;
 import com.jiashi.rpc.core.transport.server.NettyServer;
 import io.netty.bootstrap.Bootstrap;
@@ -25,7 +26,7 @@ public class HeartbeatTest {
         // 启动服务端 (使用你现有的 Server)
         new Thread(() -> {
             // 服务端的 90秒 超时配置没关系，只要客户端发得比 90秒 快就行
-            new NettyServer().start(HOST, PORT);
+            new NettyServer(new RpcConfig(HOST,PORT)).start();
         }).start();
 
         // 稍微等一下让服务端起好
