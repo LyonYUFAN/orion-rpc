@@ -14,7 +14,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 
@@ -22,6 +21,8 @@ import java.net.InetSocketAddress;
 public class NettyServer {
 
     private final RpcConfig rpcConfig;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     public NettyServer(RpcConfig rpcConfig) {
         this.rpcConfig = rpcConfig;
@@ -34,8 +35,8 @@ public class NettyServer {
     }
 
     public void start0(String host,int port){
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup,workerGroup)
@@ -52,22 +53,21 @@ public class NettyServer {
         }catch (Exception e){
             log.error("服务端启动报错", e);
         }finally {
-            workerGroup.shutdownGracefully();
-            bossGroup.shutdownGracefully();
+            if (workerGroup != null) workerGroup.shutdownGracefully();
+            if (bossGroup != null) bossGroup.shutdownGracefully();
         }
     }
 
-    //
-    public static void main(String[] args) {
-
-        // 注册一个服务
-        HelloService helloService = new HelloServiceImpl();
-        LocalRegistry.register(HelloService.class.getName(), helloService);
-        // 远程注册 (为了让客户端能发现这个服务)
-        ServiceRegistry serviceRegistry = new ZkServiceRegistryImpl();
-        serviceRegistry.registerService(HelloService.class.getName(),new InetSocketAddress("127.0.0.1", 9999));
-        // 启动服务端，监听 8088 端口
-        new NettyServer(new RpcConfig("127.0.0.1",)).start();
+    public void stop() {
+        log.info("OrionRpc 准备执行 Netty 优雅停机...");
+        if (bossGroup != null) {
+            bossGroup.shutdownGracefully();
+        }
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully();
+        }
+        log.info("OrionRpc Netty 线程池已释放完毕");
     }
+
 }
 

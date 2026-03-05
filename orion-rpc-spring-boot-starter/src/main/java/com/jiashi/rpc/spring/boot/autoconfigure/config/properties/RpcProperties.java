@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
-@ConfigurationProperties(prefix = "orion.rpc") // 配置文件中的前缀
+@ConfigurationProperties(prefix = "orion-rpc") // 配置文件中的前缀
 public class RpcProperties {
     /**
      * 服务端主机名

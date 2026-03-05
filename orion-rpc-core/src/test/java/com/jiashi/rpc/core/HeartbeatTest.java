@@ -22,11 +22,12 @@ public class HeartbeatTest {
     public static void main(String[] args) throws InterruptedException {
         int PORT = 8095;
         String HOST = "127.0.0.1";
+        String zkAddress = "localhost:2181";
 
         // 启动服务端 (使用你现有的 Server)
         new Thread(() -> {
             // 服务端的 90秒 超时配置没关系，只要客户端发得比 90秒 快就行
-            new NettyServer(new RpcConfig(HOST,PORT)).start();
+            new NettyServer(new RpcConfig(HOST,PORT,zkAddress)).start();
         }).start();
 
         // 稍微等一下让服务端起好

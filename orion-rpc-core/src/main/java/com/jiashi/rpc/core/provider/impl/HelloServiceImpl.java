@@ -1,9 +1,7 @@
 package com.jiashi.rpc.core.provider.impl;
 
 import com.jiashi.rpc.common.api.HelloService;
-import com.jiashi.rpc.core.annotation.RpcService;
 
-@RpcService
 public class HelloServiceImpl implements HelloService {
 
     @Override

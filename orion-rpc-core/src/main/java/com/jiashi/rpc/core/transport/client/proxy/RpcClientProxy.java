@@ -13,7 +13,6 @@ import com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl;
 import com.jiashi.rpc.core.transport.client.NettyClient;
 import com.jiashi.rpc.core.transport.client.UnprocessedRequests;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

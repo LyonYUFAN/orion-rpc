@@ -6,7 +6,6 @@ import com.jiashi.rpc.core.registry.ServiceRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
-import org.springframework.stereotype.Component;
 
 import java.net.InetSocketAddress;
 
