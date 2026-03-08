@@ -18,4 +18,19 @@ public class RpcProperties {
      * Zookeeper 地址
      */
     private String zkAddress = "127.0.0.1:2181";
+
+    /**
+     * 序列化算法，默认为 protostuff
+     */
+    private String serializer = "protostuff";
+
+    /**
+     * 负载均衡算法，默认为 random
+     */
+    private String loadBalancer = "random";
+
+    /**
+     * 注册中心实现，默认为 zookeeper
+     */
+    private String registry = "zookeeper";
 }

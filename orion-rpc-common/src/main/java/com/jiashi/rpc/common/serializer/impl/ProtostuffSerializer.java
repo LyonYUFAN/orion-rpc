@@ -4,6 +4,7 @@ import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;
 import com.dyuproject.protostuff.Schema;
 import com.dyuproject.protostuff.runtime.RuntimeSchema;
+import com.jiashi.rpc.common.enums.SerializationType;
 import com.jiashi.rpc.common.serializer.Serializer;
 
 import java.util.Map;
@@ -19,6 +20,12 @@ public class ProtostuffSerializer implements Serializer {
 
     // 缓存 Schema，提高性能 (核心优化点)
     private static final Map<Class<?>, Schema<?>> SCHEMA_CACHE = new ConcurrentHashMap<>();
+
+    @Override
+    public byte getCode() {
+        // 这里复用了你现有的枚举常量
+        return SerializationType.PROTOSTUFF.getCode();
+    }
 
     @Override
     public byte[] serialize(Object obj) {

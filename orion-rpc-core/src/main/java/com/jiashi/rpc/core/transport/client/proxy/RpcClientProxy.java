@@ -72,7 +72,7 @@ public class RpcClientProxy implements InvocationHandler {
                 List<ServiceInstance> instances = serviceDiscovery.lookupService(request.getInterfaceName());
                 ServiceInstance selectedInstance = loadBalancer.select(instances, request);
                 if (selectedInstance == null) {
-                    throw new RuntimeException("No available service provider for: " + request.getInterfaceName());
+                    throw new RuntimeException("No available services provider for: " + request.getInterfaceName());
                 }
 
                 RpcMessage rpcMessage = new RpcMessage();

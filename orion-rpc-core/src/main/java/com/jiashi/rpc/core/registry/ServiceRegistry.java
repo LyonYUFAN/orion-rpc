@@ -1,8 +1,11 @@
 package com.jiashi.rpc.core.registry;
 
 
+import com.jiashi.rpc.common.extension.SPI;
+
 import java.net.InetSocketAddress;
 
+@SPI
 public interface ServiceRegistry {
 
     /**

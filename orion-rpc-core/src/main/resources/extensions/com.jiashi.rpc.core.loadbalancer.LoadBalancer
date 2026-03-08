@@ -1,0 +1,2 @@
+random=com.jiashi.rpc.core.loadbalancer.RandomLoadBalancer
+roundrobin=com.jiashi.rpc.core.loadbalancer.RoundRobinLoadBalancer
