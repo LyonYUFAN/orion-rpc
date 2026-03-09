@@ -52,6 +52,7 @@
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
         <spring.version>5.3.27</spring.version>
         <spring-boot.version>2.7.18</spring-boot.version>
+        <jackson.version>2.15.2</jackson.version>
     </properties>
     <dependencies>
         <dependency>
@@ -140,6 +141,12 @@
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

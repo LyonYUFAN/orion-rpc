@@ -1,1 +1,2 @@
 protostuff=com.jiashi.rpc.common.serializer.impl.ProtostuffSerializer
+json=com.jiashi.rpc.common.serializer.impl.JsonSerializer

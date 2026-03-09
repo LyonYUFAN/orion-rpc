@@ -113,7 +113,7 @@ public class ExtensionLoader<T> {
 
     private void loadDirectory(Map<String, Class<?>> classes){
         String filename = EXTENSION_DIR+type.getName();
-        System.out.println(">>> 准备扫描的物理路径是: " + filename);
+        // System.out.println(">>> 准备扫描的物理路径是: " + filename);
         try{
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Enumeration<URL> urls = classLoader.getResources(filename);

@@ -1,11 +1,6 @@
 package com.jiashi.rpc.core.transport.server;
 
-import com.jiashi.rpc.common.api.HelloService;
 import com.jiashi.rpc.core.config.RpcConfig;
-import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
-import com.jiashi.rpc.core.provider.LocalRegistry;
-import com.jiashi.rpc.core.registry.ServiceRegistry;
-import com.jiashi.rpc.core.registry.zk.ZkServiceRegistryImpl;
 import com.jiashi.rpc.core.transport.server.initializer.RpcServerInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -14,8 +9,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
-
-import java.net.InetSocketAddress;
 
 @Slf4j
 public class NettyServer {

@@ -5,7 +5,7 @@ import com.jiashi.rpc.common.extension.SPI;
 import com.jiashi.rpc.core.registry.ServiceInstance;
 import java.util.List;
 
-@SPI()
+@SPI("roundRobin")
 public interface LoadBalancer {
     /**
      * 从服务列表中选择一个实例

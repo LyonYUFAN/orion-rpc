@@ -4,6 +4,8 @@ import com.jiashi.rpc.common.entity.RpcRequest;
 import com.jiashi.rpc.common.entity.RpcResponse;
 import com.jiashi.rpc.common.enums.MessageType;
 import com.jiashi.rpc.common.enums.SerializationType;
+import com.jiashi.rpc.common.extension.ExtensionLoader;
+import com.jiashi.rpc.core.config.RpcConfig;
 import com.jiashi.rpc.core.loadbalancer.LoadBalancer;
 import com.jiashi.rpc.core.loadbalancer.RoundRobinLoadBalancer;
 import com.jiashi.rpc.core.protocol.RpcMessage;
@@ -32,12 +34,15 @@ public class RpcClientProxy implements InvocationHandler {
     private static final AtomicInteger ID_GENERATOR = new AtomicInteger(0);
     private final ServiceDiscovery serviceDiscovery; // 增加服务发现
     private final LoadBalancer loadBalancer;         // 增加负载均衡
+    private final byte codec;
 
     public RpcClientProxy(NettyClient nettyClient) {
         this.nettyClient = nettyClient;
-        this.serviceDiscovery = new ZkServiceDiscoveryImpl();
+        RpcConfig config = RpcConfig.getInstance();
+        this.serviceDiscovery = ExtensionLoader.getExtensionLoader(ServiceDiscovery.class).getExtension(config.getRegistryType());
         // TODO ConsistentHashLoadBalancer实现类
-        this.loadBalancer = new RoundRobinLoadBalancer();
+        this.loadBalancer = ExtensionLoader.getExtensionLoader(LoadBalancer.class).getExtension(config.getLoadBalanceType());
+        this.codec = SerializationType.valueOf(config.getSerializationType().toUpperCase()).getCode();
     }
 
     // 获得代理对象
@@ -76,7 +81,7 @@ public class RpcClientProxy implements InvocationHandler {
                 }
 
                 RpcMessage rpcMessage = new RpcMessage();
-                rpcMessage.setCodec(SerializationType.PROTOSTUFF.getCode());
+                rpcMessage.setCodec(this.codec);
                 rpcMessage.setCompress((byte) 0);
                 rpcMessage.setMessageType(MessageType.REQUEST.getCode());
                 rpcMessage.setRequestId(request.getRequestId());

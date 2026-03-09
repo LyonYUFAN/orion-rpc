@@ -1,6 +1,8 @@
 package com.jiashi.rpc.core.codec;
 
 import com.jiashi.rpc.common.enums.MessageType;
+import com.jiashi.rpc.common.enums.SerializationType;
+import com.jiashi.rpc.common.extension.ExtensionLoader;
 import com.jiashi.rpc.common.serializer.Serializer;
 import com.jiashi.rpc.common.serializer.SerializerFactory;
 import com.jiashi.rpc.core.protocol.ProtocolConstants;
@@ -28,8 +30,8 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        //核心封装代码
-        //切割好的decoded正好就是我们的RpcMessage对象的字节数
+        // 核心封装代码
+        // 切割好的decoded正好就是我们的RpcMessage对象的字节数
         Object decoded = super.decode(ctx, in);
         if (decoded instanceof ByteBuf) {
             ByteBuf frame = (ByteBuf) decoded;
@@ -59,7 +61,8 @@ public class RpcMessageDecoder extends LengthFieldBasedFrameDecoder {
             byte[] bodyBytes = new byte[dataLength];
             in.readBytes(bodyBytes);
 
-            Serializer serializer = SerializerFactory.getSerializer(codec);
+            SerializationType type = SerializationType.getEnum(codec);
+            Serializer serializer = ExtensionLoader.getExtensionLoader(Serializer.class).getExtension(type.getName());
             MessageType msgTypeEnum = MessageType.findByCode(messageType);
             if (msgTypeEnum == null) {
                 throw new IllegalArgumentException("Unknown message type: " + messageType);

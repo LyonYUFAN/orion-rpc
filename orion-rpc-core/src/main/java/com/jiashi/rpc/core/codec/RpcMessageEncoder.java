@@ -1,5 +1,7 @@
 package com.jiashi.rpc.core.codec;
 
+import com.jiashi.rpc.common.enums.SerializationType;
+import com.jiashi.rpc.common.extension.ExtensionLoader;
 import com.jiashi.rpc.common.serializer.Serializer;
 import com.jiashi.rpc.common.serializer.SerializerFactory;
 import com.jiashi.rpc.core.protocol.ProtocolConstants;
@@ -15,6 +17,8 @@ public class RpcMessageEncoder extends MessageToByteEncoder<RpcMessage> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, RpcMessage rpcMessage, ByteBuf out) throws Exception {
+        SerializationType type = SerializationType.getEnum(rpcMessage.getCodec());
+        Serializer serializer = ExtensionLoader.getExtensionLoader(Serializer.class).getExtension(type.getName());
         // 1. 写入头部信息
         out.writeBytes(ProtocolConstants.MAGIC_NUMBER);
         out.writeByte(ProtocolConstants.VERSION);
@@ -27,7 +31,6 @@ public class RpcMessageEncoder extends MessageToByteEncoder<RpcMessage> {
         byte[] bodyBytes = null;
 
         if (rpcMessage.getData() != null) {
-            Serializer serializer = SerializerFactory.getSerializer(rpcMessage.getCodec());
             bodyBytes = serializer.serialize(rpcMessage.getData());
         }
 

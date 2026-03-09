@@ -1,0 +1,1 @@
+zookeeper=com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl

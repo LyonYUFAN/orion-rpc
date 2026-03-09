@@ -5,7 +5,7 @@ import com.jiashi.rpc.common.extension.SPI;
 
 import java.net.InetSocketAddress;
 
-@SPI
+@SPI("zookeeper")
 public interface ServiceRegistry {
 
     /**

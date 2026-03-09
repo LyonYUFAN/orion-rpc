@@ -1,8 +1,11 @@
 package com.jiashi.rpc.core.registry;
 
+import com.jiashi.rpc.common.extension.SPI;
+
 import java.net.InetSocketAddress;
 import java.util.List;
 
+@SPI("zookeeper")
 public interface ServiceDiscovery {
 
     /**

@@ -1,6 +1,5 @@
 package com.jiashi.rpc.core.transport.client;
 
-import com.jiashi.rpc.common.api.HelloService;
 import com.jiashi.rpc.common.entity.RpcRequest;
 import com.jiashi.rpc.common.entity.RpcResponse;
 import com.jiashi.rpc.common.enums.MessageType;
@@ -8,7 +7,6 @@ import com.jiashi.rpc.common.enums.SerializationType;
 import com.jiashi.rpc.core.codec.RpcMessageDecoder;
 import com.jiashi.rpc.core.codec.RpcMessageEncoder;
 import com.jiashi.rpc.core.protocol.RpcMessage;
-import com.jiashi.rpc.core.provider.impl.HelloServiceImpl;
 import com.jiashi.rpc.core.registry.ServiceDiscovery;
 import com.jiashi.rpc.core.registry.ServiceInstance;
 import com.jiashi.rpc.core.registry.zk.ZkServiceDiscoveryImpl;
@@ -113,12 +111,4 @@ public class NettyClient {
         group.shutdownGracefully();
     }
 
-    public static void main(String[] args) {
-
-        NettyClient nettyClient = new NettyClient();
-        RpcClientProxy rpcClientProxy = new RpcClientProxy(nettyClient);
-        HelloService service = rpcClientProxy.getProxy(HelloService.class);
-        String result = service.hello("jiashi");
-        System.out.println("RPC 调用成功！服务端返回结果: " + result);
-    }
 }
