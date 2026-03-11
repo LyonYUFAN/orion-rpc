@@ -21,7 +21,7 @@ public class RpcResponseHandler extends SimpleChannelInboundHandler<RpcMessage> 
             return;
         }
 
-        log.info("收到服务端响应: {}", msg);
+        //log.info("收到服务端响应: {}", msg);
 
         if (msg.getMessageType() == MessageType.RESPONSE.getCode()) {
             RpcResponse response = (RpcResponse) msg.getData();

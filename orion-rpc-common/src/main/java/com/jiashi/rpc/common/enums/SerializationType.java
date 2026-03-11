@@ -10,7 +10,7 @@ public enum SerializationType {
 
     JSON((byte) 1, "json"),
     PROTOSTUFF((byte) 2, "protostuff"),
-    HESSIAN((byte) 3, "hessian");
+    KRYO((byte) 3, "kryo");
 
     private final byte code;
     private final String name;

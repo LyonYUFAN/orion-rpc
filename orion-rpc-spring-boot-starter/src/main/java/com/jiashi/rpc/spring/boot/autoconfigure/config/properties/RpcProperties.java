@@ -22,7 +22,7 @@ public class RpcProperties {
     /**
      * 序列化算法，默认为 protostuff
      */
-    private String serializer = "protostuff";
+    private String serializer = "json";
 
     /**
      * 负载均衡算法，默认为 random

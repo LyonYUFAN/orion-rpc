@@ -56,7 +56,7 @@ public class NettyClient {
             UnprocessedRequests.put(request.getRequestId(), resultFuture);
             channel.writeAndFlush(rpcMessage).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
-                    log.info("Client send message: [{}]", rpcMessage);
+                    //log.info("Client send message: [{}]", rpcMessage);
                 } else {
                     future.channel().close();
                     log.error("Send failed:", future.cause());
